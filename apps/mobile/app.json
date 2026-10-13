@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Weta R. C. School App",
+    "slug": "weta-r-c-school-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}

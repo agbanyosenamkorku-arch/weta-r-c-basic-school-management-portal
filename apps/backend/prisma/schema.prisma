@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
+
+  student      UserStudent?
+  teacher      UserTeacher?
+  parent       UserParent?
+  announcements Announcement[]
+}
+
+model UserStudent {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  admissionNo   String      @unique
+  dateOfBirth   DateTime
+  gender        String
+  address       String
+  guardianName  String?
+  guardianPhone String?
+  createdAt     DateTime    @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  enrollments  Enrollment[]
+  attendance   Attendance[]
+  grades       Grade[]
+  fees         Fee[]
+  payments     Payment[]
+  reportCards  ReportCard[]
+  parentChild  ParentChild[]
+}
+
+model UserTeacher {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  employeeNo String   @unique
+  department String?
+  createdAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  subjects  Subject[]
+}
+
+model UserParent {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  phone     String
+  createdAt DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+  children  ParentChild[]
+}
+
+model AcademicYear {
+  id         String       @id @default(uuid())
+  name       String       @unique
+  startDate  DateTime
+  endDate    DateTime
+  enrollments Enrollment[]
+  reportCards ReportCard[]
+}
+
+model ClassRoom {
+  id         String       @id @default(uuid())
+  name       String
+  section    String
+  enrollments Enrollment[]
+  timetable  Timetable[]
+}
+
+model Subject {
+  id        String      @id @default(uuid())
+  name      String
+  code      String      @unique
+  teacherId String
+  teacher   UserTeacher @relation(fields: [teacherId], references: [id])
+  grades    Grade[]
+  timetable Timetable[]
+}
+
+model Enrollment {
+  id             String       @id @default(uuid())
+  studentId      String
+  classroomId    String
+  academicYearId String
+  enrollmentDate DateTime     @default(now())
+  status         String       @default("ACTIVE")
+
+  student       UserStudent   @relation(fields: [studentId], references: [id])
+  classroom     ClassRoom     @relation(fields: [classroomId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+}
+
+model Attendance {
+  id        String            @id @default(uuid())
+  studentId String
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+
+  student   UserStudent        @relation(fields: [studentId], references: [id])
+}
+
+model Grade {
+  id        String   @id @default(uuid())
+  studentId String
+  subjectId String
+  examName  String
+  score     Float
+  maxScore  Float
+  remarks   String?
+
+  student   UserStudent @relation(fields: [studentId], references: [id])
+  subject   Subject     @relation(fields: [subjectId], references: [id])
+}
+
+model Fee {
+  id          String   @id @default(uuid())
+  studentId   String
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  student     UserStudent @relation(fields: [studentId], references: [id])
+  payments    Payment[]
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  studentId   String?
+  feeId       String?
+  amount      Float
+  currency    String   @default("usd")
+  provider    String
+  providerRef String?
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     UserStudent? @relation(fields: [studentId], references: [id])
+  fee         Fee?         @relation(fields: [feeId], references: [id])
+}
+
+model Timetable {
+  id          String    @id @default(uuid())
+  classroomId String
+  subjectId   String
+  dayOfWeek   String
+  startTime   String
+  endTime     String
+
+  classroom   ClassRoom @relation(fields: [classroomId], references: [id])
+  subject     Subject   @relation(fields: [subjectId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ParentChild {
+  id        String @id @default(uuid())
+  parentId  String
+  studentId String
+
+  parent    UserParent  @relation(fields: [parentId], references: [id])
+  student   UserStudent @relation(fields: [studentId], references: [id])
+
+  @@unique([parentId, studentId])
+}
+
+model ReportCard {
+  id            String   @id @default(uuid())
+  studentId     String
+  academicYearId String?
+  reportData    Json
+  pdfPath       String
+  generatedAt   DateTime @default(now())
+
+  student       UserStudent @relation(fields: [studentId], references: [id])
+  academicYear AcademicYear? @relation(fields: [academicYearId], references: [id])
+}
