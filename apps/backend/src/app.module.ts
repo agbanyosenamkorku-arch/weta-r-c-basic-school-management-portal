@@ -13,6 +13,10 @@ import { PaymentsModule } from './payments/payments.module';
 import { ReportCardsModule } from './reportcards/reportcards.module';
 import { ImportModule } from './import/import.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { TeachersModule } from './teachers/teachers.module';
+import { SubjectsModule } from './subjects/subjects.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -30,6 +34,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ReportCardsModule,
     ImportModule,
     AnalyticsModule,
+    TeachersModule,
+    SubjectsModule,
+    AnnouncementsModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}
